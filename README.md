@@ -1,2 +1,2 @@
 # descriptive-analysis-supermarket-sales
-Este repositório contém uma análise descritiva de um conjunto de dados de vendas de supermercado.
+Este repositório contém uma análise descritiva de um conjunto de dados de vendas de supermercado, com foco no desempenho de vendas em diferentes filiais e linhas de produtos. O objetivo principal é demonstrar técnicas básicas de análise descritiva e a apresentação de relatórios, utilizando resumos estatísticos, análise de distribuição e tendências temporais.
