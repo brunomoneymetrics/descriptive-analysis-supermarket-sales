@@ -1,0 +1,229 @@
+---
+title: "Relatório Descritivo de: Supermarket Sales Data "
+author: "Bruno Pereira"
+lang: pt
+format: 
+  html:
+    page-layout: full
+execute: 
+  echo: false
+  warning: false
+---
+
+:::: grid 
+::: 
+## Descrição do Conjunto de Dados
+
+O conjunto de dados utilizado neste estudo foi obtido do repositório público Kaggle, sob o título "Supermarket Sales Data". Ele compreende 1.000 observações, coletadas por meio do registro automático de transações individuais realizadas em três filiais de uma rede de supermercados em Myanmar, localizadas nas cidades de Yangon, Naypyitaw e Mandalay. O método de coleta de dados está vinculado ao sistema de ponto de venda (PDV) do supermercado, que registra informações detalhadas de cada venda em tempo real.
+
+O conjunto de dados representa uma amostra da população de consumidores atendidos pela rede de supermercados, incluindo variáveis que capturam características do cliente (gênero, tipo de cliente), do produto (linha de produto, preço unitário, quantidade), e da transação (data, horário, forma de pagamento, receita bruta, custo, lucro e avaliação do atendimento).
+
+Este dataset foi escolhido porque oferece uma estrutura rica e variada de dados que permite a aplicação de métodos estatísticos descritivos, inferenciai.
+
+:::
+
+:::: grid 
+::: 
+
+## Variáveis
+A variável de foco escolhida foi Sales, uma variável quantitativa contínua que representa o valor total de cada venda, incluindo impostos. Ela foi selecionada por ser a mais informativa no contexto do dataset. A partir dela, foram realizadas análises descritivas e comparativas em relação à filial, data e horário das transações, além do estudo de sua distribuição estatística e medidas resumo, como média, mediana, desvio-padrão, valores máximos e mínimos. 
+
+:::
+
+
+::::: grid 
+## Sales (Vendas)
+:::
+A análise mostrara que a mediana das vendas foi de 240,83 na filial Alex, 252,88 em Cairo e 271,42 em Giza. Isso indica que, na maioria das transações, a filial Giza tende a registrar valores de venda mais elevados do que as demais. A escolha da mediana como medida central se justifica pela assimetria positiva (Figura 1) observada nas três filiais (com coeficientes de assimetria superiores a 0), o que sugere a presença de valores extremos altos que poderiam distorcer a média. Um resumo estatístico pode ser observado na tabela 1 abaixo:
+
+**Tabela 1 – Medidas descritivas da variável Sales por filial**
+
+
+```{python}
+##
+import pandas as pd 
+import numpy as np 
+import matplotlib.pyplot as plt 
+import seaborn as sns 
+from scipy.stats import skew, kurtosis
+#
+plt.style.use('ggplot')
+
+dataset = pd.read_csv("SuperMarketAnalysis.csv") 
+
+# Resumo Estatístico dos Dados Quantitativos por Filial 
+summary = (
+    dataset.groupby('Branch')[['Sales', 'Unit price', 'cogs', 'gross income']]
+    .agg([
+        ('mean', 'mean'),
+        ('std', 'std'),
+        ('min', 'min'),
+        ('q1', lambda x: x.quantile(0.25)),
+        ('median', 'median'),
+        ('q3', lambda x: x.quantile(0.75)),
+        ('max', 'max'),
+        ('skew', lambda x: x.skew()),
+        ('kurtosis', lambda x: x.kurt())
+    ])
+)
+
+summary_sales = summary['Sales'] 
+summary_sales
+```
+
+:::
+
+**Figura  1 – Distribuição das Vendas por filial**
+ 
+
+```{python}
+plt.figure(figsize=(10,6))
+
+sns.kdeplot(data=dataset, x='Sales', hue='Branch')
+plt.title('Distribuição das Vendas por filial', weight= 'bold') 
+plt.xlabel('Vendas',weight= 'bold')
+plt.ylabel('Densidade', weight= 'bold')
+plt.show()
+
+
+```
+
+:::
+
+**Figura 2 – Box-plot Total de vendas por filial**
+
+
+```{python}
+
+plt.figure(figsize=(10,6))
+
+sns.boxplot(data=dataset, x='Sales', y='Branch', hue='Branch')
+plt.title("Box-plot Total de vendas por filial", weight='bold')
+plt.xlabel("Vendas", weight='bold')
+plt.ylabel("Filial", weight='bold')
+
+plt.show()
+
+
+```
+
+
+A exibição de múltiplos boxplots no mesmo gráfico é especialmente valiosa ao compararmos dados por categorias. Ao observar o gráfico, notamos que, embora a filial de Giza apresente a maior mediana, o tamanho das caixas indica que não há grande variabilidade nas vendas entre as diferentes filiais. Vale destacar ainda a presença de outliers nas filiais do Cairo e de Alex.
+
+As vendas por linha de produtos também apresentam variações moderadas (Figura 3), com uma distribuição relativamente simétrica, embora algumas categorias, como Food and beverages e Fashion accessories, exibam valores extremos (outliers) que indicam transações pontualmente elevadas.
+
+Quando analisamos as estatísticas por filial, observamos que a média de vendas varia de forma relevante entre os produtos e entre as localidades. Por exemplo, na filial do Cairo, a linha Health and beauty apresenta a maior média de vendas (≈ 377), com um desvio padrão elevado (≈ 260), indicando maior dispersão. Em Alex, a linha com maior média é Home and lifestyle (≈ 345), enquanto Giza apresenta um destaque em Food and beverages (≈ 360).
+
+Essas diferenças sugerem a possibilidade de diferenças estatisticamente significativas entre as médias das filiais e/ou linhas de produtos — o que pode ser investigado com testes como ANOVA ou testes t para verificar se as diferenças são estatisticamente significativas.
+
+
+**Tabela 2 – Medidas descritivas da variável Vendas por Linha de Produto**
+
+```{python}
+summary_product = (
+    dataset.groupby(['Branch','Product line'])[['Sales', 'Unit price', 'cogs', 'gross income']]
+    .agg([
+        ('mean', 'mean'),
+        ('std', 'std'),
+        ('min', 'min'),
+        ('q1', lambda x: x.quantile(0.25)),
+        ('median', 'median'),
+        ('q3', lambda x: x.quantile(0.75)),
+        ('max', 'max'),
+        ('skew', lambda x: x.skew()),
+        ('kurtosis', lambda x: x.kurt())
+    ])
+)
+
+summary_product_sales = summary_product['Sales']
+summary_product_sales
+```
+
+::::
+
+**Figura 3 – Box-plot variável Vendas por Linha de Produto**
+
+```{python}
+# box-plot
+plt.figure(figsize=(10,6))
+
+sns.boxplot(data=dataset, x='Sales', y='Product line', hue='Product line')
+plt.title("Box-plot de vendas por Linha de Produto filial", weight='bold')
+plt.xlabel("Vendas", weight='bold')
+plt.ylabel("Linha de Produto", weight='bold')
+
+plt.show()
+
+```
+
+::::: grid 
+::::
+## Vendas e no Tempo 
+
+Após explorarmos as diferenças entre filiais e linhas de produtos por meio de boxplots e estatísticas descritivas, investigamos como o comportamento das vendas evolui ao longo do tempo. A figura 4 mostra as vendas diárias ao longo dos três primeiros meses de 2019, juntamente com uma média móvel de 7 dias. A linha fina (em tom claro) representa a série original de vendas diárias, que apresenta alta volatilidade, típica do varejo. Já a linha espessa em vermelho corresponde à média móvel, que suaviza as oscilações e revela uma tendência mais clara no comportamento das vendas. A tendência observada indica um desempenho relativamente estável ao longo do período, apesar das flutuações diárias.
+
+**Figura 4 – Vendas ao longo do tempo**
+
+```{python}
+dataset['Date'] = pd.to_datetime(dataset['Date'])
+
+df_daily = dataset.groupby('Date')['Sales'].sum().reset_index()
+df_daily['Sales_MA7'] = df_daily['Sales'].rolling(window=7).mean()
+
+plt.figure(figsize=(14,5))
+plt.plot(df_daily['Date'], df_daily['Sales'], alpha=0.4, label='Vendas Diárias')
+plt.plot(df_daily['Date'], df_daily['Sales_MA7'], color='tomato', linewidth=2.5, label='Média Móvel (7 dias)')
+plt.title('Vendas com Suavização')
+plt.xlabel('Data')
+plt.ylabel('Vendas')
+plt.xticks(rotation=45)
+plt.grid(True)
+plt.legend()
+plt.tight_layout()
+plt.show()
+
+
+```
+
+
+Por fim, foi investigado padrões de comportamento ao longo da semana e do dia. A figura 5 revela que as vendas se concentram principalmente entre 11h e 17h, com destaque para a terça-feira às 15h e o sábado às 14h, momentos em que são registrados os picos mais altos de movimentação, ambos ultrapassando 480 transações. Como era de se esperar, os finais de semana — especialmente sábado e domingo — concentram um grande volume de vendas, sobretudo no final da manhã e início da tarde. Entre os dias úteis, quinta e sexta-feira também se destacam com horários de pico, sugerindo um aumento da demanda à medida que a semana se aproxima do fim. Em contrapartida, horários como 10h ou após as 19h tendem a registrar menor atividade, embora ocorram alguns picos isolados nesses intervalos.
+
+**Figura 5 – Heatmap de Vendas: Dia da Semana x Hora do Dia**
+
+```{python}
+dataset['Time'] = pd.to_datetime(dataset['Time'], format='%I:%M:%S %p')
+
+dataset['Hour'] = dataset['Time'].dt.hour
+dataset['Weekday'] = dataset['Date'].dt.day_name()  # ou .dt.weekday para números
+
+# Cria a tabela de vendas por dia da semana e hora
+pivot = dataset.pivot_table(index='Weekday', columns='Hour', values='Sales', aggfunc='mean')
+
+# Reordena os dias
+dias_ordem = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+pivot = pivot.reindex(dias_ordem)
+
+# Plot do heatmap
+plt.figure(figsize=(15, 6))
+sns.heatmap(pivot, cmap='YlOrRd', linewidths=0.5, annot=True, fmt='.0f')
+plt.title('Heatmap de Vendas: Dia da Semana x Hora do Dia')
+plt.xlabel('Hora do Dia')
+plt.ylabel('Dia da Semana')
+plt.show()
+```
+
+::::
+
+::::: grid 
+::::
+## Conclusão
+
+A análise descritiva do conjunto de dados de vendas do supermercado revelou que as transações não apresentam variações significativas entre as filiais. A distribuição de vendas nas três filiais é assimétrica á direita, com a presença de outliers em Cairo e Alex. As vendas por linha de produto mostraram variações, especialmente em categorias como Food and Beverages e Fashion Accessories, que possuem maiores desvios padrões e outliers. A análise temporal indicou que, embora as vendas diárias apresentem flutuações, a tendência geral é estável, com as vendas concentradas entre 11h e 17h, especialmente nos finais de semana e no final da tarde durante a semana.
+
+::::
+
+
+
+
+
+
